@@ -3,17 +3,18 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 // --- Variables d'environnement ---
-const token = process.env.DISCORD_TOKEN?.trim();
+let token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID?.trim();
 const guildId = process.env.GUILD_ID?.trim();
 
-// --- Vérifications ---
+// Vérification et nettoyage du token
 if (!token) {
-    console.error("❌ Erreur : DISCORD_TOKEN manquant !");
+    console.error("❌ DISCORD_TOKEN manquant !");
     process.exit(1);
 }
+token = token.trim().replace(/"/g, ''); // trim et suppression des guillemets
 
-console.log("🔹 Token présent :", !!token);
+console.log("🔹 Token (longueur) :", token.length);
 console.log("🔹 Client ID présent :", !!clientId);
 console.log("🔹 Guild ID présent :", !!guildId);
 
