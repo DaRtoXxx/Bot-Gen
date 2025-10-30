@@ -2,12 +2,29 @@ const { Client, Collection, GatewayIntentBits } = require('discord.js');
 const fs = require('node:fs');
 const path = require('path');
 const { REST, Routes } = require('discord.js');
-const { token, clientId, guildId } = require('./token.json');
+require('dotenv').config(); // charge les variables d'environnement locales
 
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildMembers] });
+// Variables d'environnement (Render les fournira automatiquement)
+const token = process.env.DISCORD_TOKEN;
+const clientId = process.env.CLIENT_ID;
+const guildId = process.env.GUILD_ID;
+
+if (!token) {
+    console.error("❌ Erreur : aucune variable DISCORD_TOKEN trouvée !");
+    process.exit(1);
+}
+
+if (!clientId || !guildId) {
+    console.warn("⚠️ CLIENT_ID ou GUILD_ID non définis — les commandes ne seront pas déployées globalement !");
+}
+
+const client = new Client({
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildPresences, GatewayIntentBits.GuildMembers]
+});
 
 client.cooldowns = new Collection();
 client.commands = new Collection();
+
 const commandsPath = path.join(__dirname, 'commands');
 const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
 
@@ -23,17 +40,18 @@ const rest = new REST({ version: '10' }).setToken(token);
 
 (async () => {
     try {
-        console.log(`Début de l'enregistrement des ${client.commands.size} commandes.`);
+        console.log(`🔁 Début de l'enregistrement des ${client.commands.size} commandes.`);
 
         const commands = client.commands.map(command => command.data.toJSON());
-        const data = await rest.put(
-            Routes.applicationGuildCommands(clientId, guildId),
-            { body: commands },
-        );
 
-        console.log(`Commandes enregistrées avec succès : ${data.length}`);
+        if (clientId && guildId) {
+            await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commands });
+            console.log(`✅ Commandes enregistrées avec succès sur ${guildId} !`);
+        } else {
+            console.log("⚠️ CLIENT_ID ou GUILD_ID manquants : commandes non déployées.");
+        }
     } catch (error) {
-        console.error('Erreur lors du déploiement des commandes :', error);
+        console.error('❌ Erreur lors du déploiement des commandes :', error);
     }
 })();
 
@@ -62,8 +80,15 @@ client.on('interactionCreate', async interaction => {
         await command.execute(interaction);
     } catch (error) {
         console.error(error);
-        await interaction.reply({ content: 'Il y a eu une erreur lors de l\'exécution de cette commande!', ephemeral: true });
+        await interaction.reply({
+            content: '❌ Il y a eu une erreur lors de l’exécution de cette commande !',
+            ephemeral: true
+        });
     }
+});
+
+client.once('ready', () => {
+    console.log(`🤖 Connecté en tant que ${client.user.tag}`);
 });
 
 client.login(token);
