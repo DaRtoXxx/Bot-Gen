@@ -1,3 +1,6 @@
+// --- Charger dotenv dès le début ---
+require('dotenv').config();
+
 const { Client, Collection, GatewayIntentBits, REST, Routes } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -7,18 +10,19 @@ let token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID?.trim();
 const guildId = process.env.GUILD_ID?.trim();
 
-// Vérification et nettoyage du token
+// Vérification du token
 if (!token) {
     console.error("❌ DISCORD_TOKEN manquant !");
     process.exit(1);
 }
-token = token.trim().replace(/"/g, ''); // trim et suppression des guillemets
 
-console.log("🔹 Token (longueur) :", token.length);
+// Nettoyage du token
+token = token.trim().replace(/"/g, '');
+console.log("🔹 Token longueur :", token.length);
 console.log("🔹 Client ID présent :", !!clientId);
 console.log("🔹 Guild ID présent :", !!guildId);
 
-// --- Création du client ---
+// --- Création du client Discord ---
 const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences]
 });
@@ -91,7 +95,7 @@ client.once('ready', async () => {
     }
 });
 
-// --- Login ---
+// --- Connexion au bot ---
 client.login(token).catch(err => {
     console.error("❌ Impossible de se connecter : Token invalide ou problème réseau.", err);
     process.exit(1);
