@@ -1,7 +1,14 @@
 {
+  "name": "bot-gen",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
   "dependencies": {
     "discord.js": "^14.16.0",
-    "node-fetch": "^2.7.0",
-    "axios": "^1.7.7"
+    "axios": "^1.7.7",
+    "node-fetch": "^2.6.7"
+  },
+  "scripts": {
+    "start": "node index.js"
   }
 }
