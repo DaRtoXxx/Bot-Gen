@@ -3,18 +3,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 // --- Variables d'environnement ---
-const token = process.env.DISCORD_TOKEN;
-const clientId = process.env.CLIENT_ID;
-const guildId = process.env.GUILD_ID;
+const token = process.env.DISCORD_TOKEN?.trim();
+const clientId = process.env.CLIENT_ID?.trim();
+const guildId = process.env.GUILD_ID?.trim();
 
 // --- Vérifications ---
 if (!token) {
     console.error("❌ Erreur : DISCORD_TOKEN manquant !");
     process.exit(1);
-}
-
-if (!clientId || !guildId) {
-    console.warn("⚠️ CLIENT_ID ou GUILD_ID manquants, les commandes guild-only ne seront pas déployées.");
 }
 
 console.log("🔹 Token présent :", !!token);
@@ -39,23 +35,6 @@ if (fs.existsSync(commandsPath)) {
         client.commands.set(command.data.name, command);
     }
 }
-
-// --- Déploiement des commandes ---
-(async () => {
-    try {
-        if (clientId && guildId && client.commands.size > 0) {
-            const rest = new REST({ version: '10' }).setToken(token);
-            const commandsData = client.commands.map(cmd => cmd.data.toJSON());
-
-            await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandsData });
-            console.log(`✅ Commandes enregistrées avec succès sur le serveur ${guildId} !`);
-        } else {
-            console.log("⚠️ Pas de commandes à déployer ou variables manquantes.");
-        }
-    } catch (error) {
-        console.error("❌ Erreur lors du déploiement des commandes :", error);
-    }
-})();
 
 // --- Chargement des événements ---
 const eventsPath = path.join(__dirname, 'events');
@@ -92,9 +71,23 @@ if (!client._interactionListenerAdded) {
     client._interactionListenerAdded = true;
 }
 
-// --- Ready ---
-client.once('ready', () => {
+// --- Ready + déploiement des commandes ---
+client.once('ready', async () => {
     console.log(`🤖 Connecté en tant que ${client.user.tag}`);
+
+    if (clientId && guildId && client.commands.size > 0) {
+        const rest = new REST({ version: '10' }).setToken(token);
+        const commandsData = client.commands.map(cmd => cmd.data.toJSON());
+
+        try {
+            await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandsData });
+            console.log(`✅ Commandes enregistrées avec succès sur le serveur ${guildId} !`);
+        } catch (err) {
+            console.error('❌ Erreur lors du déploiement des commandes :', err);
+        }
+    } else {
+        console.log("⚠️ Pas de commandes à déployer ou variables manquantes.");
+    }
 });
 
 // --- Login ---
