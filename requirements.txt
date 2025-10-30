@@ -1,0 +1,8 @@
+workspace@ /home/runner/workspace
+├── axios@1.13.1
+├── discord.js@14.24.2
+├── dotenv@17.2.3
+├── node-bin-setup@1.1.4 extraneous
+├── node-fetch@2.7.0
+└── node@18.2.0
+
